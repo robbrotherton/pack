@@ -26,6 +26,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// pack_circles_all
+DataFrame pack_circles_all(DataFrame polygon, NumericVector radii, DataFrame existing_circles, int max_attempts, int seed, bool neat_edges);
+RcppExport SEXP _pack_pack_circles_all(SEXP polygonSEXP, SEXP radiiSEXP, SEXP existing_circlesSEXP, SEXP max_attemptsSEXP, SEXP seedSEXP, SEXP neat_edgesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type polygon(polygonSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type existing_circles(existing_circlesSEXP);
+    Rcpp::traits::input_parameter< int >::type max_attempts(max_attemptsSEXP);
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< bool >::type neat_edges(neat_edgesSEXP);
+    rcpp_result_gen = Rcpp::wrap(pack_circles_all(polygon, radii, existing_circles, max_attempts, seed, neat_edges));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pack_polygons
 SEXP pack_polygons(DataFrame polygon, NumericVector radii, int sides, int max_attempts, int seed, bool neat_edges);
 RcppExport SEXP _pack_pack_polygons(SEXP polygonSEXP, SEXP radiiSEXP, SEXP sidesSEXP, SEXP max_attemptsSEXP, SEXP seedSEXP, SEXP neat_edgesSEXP) {
@@ -45,6 +61,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_pack_pack_circles", (DL_FUNC) &_pack_pack_circles, 6},
+    {"_pack_pack_circles_all", (DL_FUNC) &_pack_pack_circles_all, 6},
     {"_pack_pack_polygons", (DL_FUNC) &_pack_pack_polygons, 6},
     {NULL, NULL, 0}
 };

@@ -168,6 +168,143 @@ DataFrame pack_circles(DataFrame polygon,
 
 
 // [[Rcpp::export]]
+DataFrame pack_circles_all(DataFrame polygon,
+                           NumericVector radii,
+                           DataFrame existing_circles,
+                           int max_attempts = 200,
+                           int seed = 1,
+                           bool neat_edges = true) {
+
+  NumericVector x_existing = existing_circles["x"];
+  NumericVector y_existing = existing_circles["y"];
+  NumericVector r_existing = existing_circles["r"];
+  int n_existing = x_existing.size();
+
+  int n = 0;
+  int max_circles = radii.size();
+
+  int attempt = 0;
+  bool overlap;
+  double new_x;
+  double new_y;
+  double new_r;
+  double dist;
+  NumericVector polygonXPoints = polygon["x"];
+  NumericVector polygonYPoints = polygon["y"];
+  double minX = vecmin(polygonXPoints);
+  double maxX = vecmax(polygonXPoints);
+  double minY = vecmin(polygonYPoints);
+  double maxY = vecmax(polygonYPoints);
+  // NumericVector::iterator minY = std::min_element(polygonYPoints.begin(), polygonYPoints.end());
+  // NumericVector::iterator maxX = std::max_element(polygonXPoints.begin(), polygonXPoints.end());
+  // NumericVector::iterator maxY = std::max_element(polygonYPoints.begin(), polygonYPoints.end());
+  // int numVerts = polygonXPoints.length();
+  // int j = numVerts - 1;
+  NumericVector x_out(max_circles);
+  NumericVector y_out(max_circles);
+  NumericVector r_out(max_circles);
+  std::default_random_engine generator(seed);
+  std::uniform_real_distribution<double> rand_x(minX,maxX);
+  std::uniform_real_distribution<double> rand_y(minY,maxY);
+
+  for(int n = 0; n < max_circles; ++n) {
+
+    for(int a = 0; a < max_attempts; ++a) {
+
+      overlap = FALSE;
+      bool within_perim = FALSE;
+
+
+      // first, make sure the new circle is placed within the polygon boundary
+      while(within_perim==FALSE) {
+
+        ++attempt;
+
+        // if(attempt > max_attempts) break;
+        new_x = rand_x(generator);
+        new_y = rand_y(generator);
+        new_r = radii[n];
+
+        if(neat_edges) {
+
+          for(int k = 0; k < 16; k++) {
+            double theta = M_PI * (k / 8.0);
+            double pointX = new_x + new_r * cos(theta);
+            double pointY = new_y + new_r * sin(theta);
+            if(!polygonContainsPoint(polygonXPoints,
+                                     polygonYPoints,
+                                     pointX,
+                                     pointY)) {
+              break;
+            }
+            if(k==15) within_perim=TRUE;
+          }
+        }
+
+        if(!neat_edges) {
+          within_perim = polygonContainsPoint(polygonXPoints,
+                                              polygonYPoints,
+                                              new_x,
+                                              new_y);
+        }
+      }
+
+      // now check the values against existing circles
+      // returns TRUE if circles overlap
+
+      for(int k = 0; k < n_existing; ++k) {
+
+        dist = sqrt(pow(x_existing[k]-new_x, 2) + pow(y_existing[k]-new_y, 2));
+
+        overlap = dist < (new_r + r_existing[k]);
+        // if there's overlap, stop checking
+        if(overlap) break;
+
+      }
+
+      if(!overlap) {
+        for(int i = 0; i < n; ++i) {
+
+          dist = sqrt(pow(x_out[i]-new_x, 2) + pow(y_out[i]-new_y, 2));
+
+          overlap = dist < (new_r + r_out[i]);
+          // if there's overlap, stop checking
+          if(overlap) break;
+
+        }
+      }
+
+      // if there's no overlap after checking every row...
+      if(!overlap) {
+
+        x_out[n] = new_x;
+        y_out[n] = new_y;
+        r_out[n] = new_r;
+
+        // ++n;
+        // attempt = 0;
+        break;
+
+      }
+
+      // if(n >= max_circles) break; // all the circles fit
+
+    }
+  }
+
+  x_out.erase(std::remove(x_out.begin(), x_out.end(), 0), x_out.end());
+  y_out.erase(std::remove(y_out.begin(), y_out.end(), 0), y_out.end());
+  r_out.erase(std::remove(r_out.begin(), r_out.end(), 0), r_out.end());
+
+  Rcout << "made " << x_out.size();
+
+  return DataFrame::create(_["x"]= x_out, _["y"]= y_out, _["r"]= r_out);
+
+}
+
+
+
+// [[Rcpp::export]]
 SEXP pack_polygons(DataFrame polygon,
                    NumericVector radii,
                    int sides,

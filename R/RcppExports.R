@@ -26,6 +26,10 @@ pack_circles <- function(polygon, radii, existing_circles, max_attempts = 2000L,
     .Call(`_pack_pack_circles`, polygon, radii, existing_circles, max_attempts, seed, neat_edges)
 }
 
+pack_circles_all <- function(polygon, radii, existing_circles, max_attempts = 200L, seed = 1L, neat_edges = TRUE) {
+    .Call(`_pack_pack_circles_all`, polygon, radii, existing_circles, max_attempts, seed, neat_edges)
+}
+
 pack_polygons <- function(polygon, radii, sides, max_attempts = 2000L, seed = 1L, neat_edges = TRUE) {
     .Call(`_pack_pack_polygons`, polygon, radii, sides, max_attempts, seed, neat_edges)
 }
